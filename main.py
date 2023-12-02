@@ -1,13 +1,16 @@
 from Tokens.token import Token, Player, Platform
 import pygame
 pygame.init()
-screen = pygame.display.set_mode((1280, 720))
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 running = True
 
 tokens = [Player(), Platform(50, 400, 200, 10), Platform(0, 550, 1280, 40)]
 dt = 0
-
+camera_scroll_speed = 1
+half_camera_boundry = 300
 
 def get_all_collisions(movable):
     
@@ -40,6 +43,22 @@ def move(token):
                 token.velocity.y = 0
                 token.hitbox.y = collision.hitbox.y + collision.hitbox.h
 
+def handle_camera():
+
+    if(isinstance(tokens[0], Player)):
+        player = tokens[0]
+
+        if player.hitbox.x > SCREEN_WIDTH/2 - half_camera_boundry:
+            for token in tokens:
+                token.hitbox.x -= (player.speed - camera_scroll_speed)
+
+        if player.hitbox.x < SCREEN_HEIGHT/2 + half_camera_boundry:
+            for token in tokens:
+                 token.hitbox.x += (player.speed - camera_scroll_speed)
+
+    else:
+        print("main.py/handle_camera !! DEBUG:  Player is not index 0")
+
 
 while running:
     for event in pygame.event.get():
@@ -50,7 +69,9 @@ while running:
 
     for token in tokens:
         token.update()
-
+    
+    handle_camera()
+    
     for token in tokens:
         move(token)
 
