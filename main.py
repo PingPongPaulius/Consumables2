@@ -5,7 +5,7 @@ screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 running = True
 
-tokens = [Player(), Platform(50, 400, 200, 10)]
+tokens = [Player(), Platform(50, 400, 200, 10), Platform(0, 550, 1280, 40)]
 dt = 0
 
 
@@ -37,6 +37,7 @@ def move(token):
                     token.is_on_ground = True
                 token.hitbox.y = collision.hitbox.y - token.hitbox.h
             if token.velocity.y < 0:
+                token.velocity.y = 0
                 token.hitbox.y = collision.hitbox.y + collision.hitbox.h
 
 

@@ -43,12 +43,15 @@ class Player(Token):
         if keys[pygame.K_w] and self.is_on_ground:
             self.velocity.y = -25
 
-        self.velocity.y += 1
-        if self.velocity.y > 3:
-            self.velocity.y += 0.5
+        if self.is_on_ground and self.velocity.y >= 1:
+            self.velocity.y = 0
+        else:
+            self.velocity.y += 1
+            if self.velocity.y > 3:
+                self.velocity.y += 0.5
 
-        if self.velocity.y > 7:
-            self.velocity.y = 7
+            if self.velocity.y > 7:
+                self.velocity.y = 7
 
         self.is_on_ground = False
 
