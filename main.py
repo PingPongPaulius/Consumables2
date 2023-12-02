@@ -33,11 +33,11 @@ def move(token):
         collisions = get_all_collisions(token)
         for collision in collisions:
             if token.velocity.y > 0:
-                #print("Collision")
+                if isinstance(token, Player):
+                    token.is_on_ground = True
                 token.hitbox.y = collision.hitbox.y - token.hitbox.h
             if token.velocity.y < 0:
                 token.hitbox.y = collision.hitbox.y + collision.hitbox.h
-                #print("Collision")
 
 
 while running:
