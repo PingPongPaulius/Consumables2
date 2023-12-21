@@ -16,7 +16,7 @@ def get_all_collisions(movable):
     
     collisions = []
     for token in tokens:
-        if token != movable and movable.collides(token):
+        if token != movable and movable.collides(token) :
             collisions.append(token)
 
     return collisions
@@ -28,22 +28,24 @@ def move(token):
         collisions = get_all_collisions(token)
         token.add_collisions(collisions)
         for collision in collisions:
-            if token.velocity.x > 0:
-                token.hitbox.x = collision.hitbox.x - token.hitbox.w
-            if token.velocity.x < 0:
-                token.hitbox.x = collision.hitbox.x + collision.hitbox.w
+            if collision.transparent == False and token.transparent == False:
+                if token.velocity.x > 0:
+                    token.hitbox.x = collision.hitbox.x - token.hitbox.w
+                if token.velocity.x < 0:
+                    token.hitbox.x = collision.hitbox.x + collision.hitbox.w
     if token.velocity.y != 0:
         token.moveY(dt)
         collisions = get_all_collisions(token)
         token.add_collisions(collisions)
         for collision in collisions:
-            if token.velocity.y > 0:
-                if isinstance(token, Player):
-                    token.is_on_ground = True
-                token.hitbox.y = collision.hitbox.y - token.hitbox.h
-            if token.velocity.y < 0:
-                token.velocity.y = 0
-                token.hitbox.y = collision.hitbox.y + collision.hitbox.h
+            if collision.transparent == False and token.transparent == False:
+                if token.velocity.y > 0:
+                    if isinstance(token, Player):
+                        token.is_on_ground = True
+                    token.hitbox.y = collision.hitbox.y - token.hitbox.h
+                if token.velocity.y < 0:
+                    token.velocity.y = 0
+                    token.hitbox.y = collision.hitbox.y + collision.hitbox.h
 
 def handle_camera():
 

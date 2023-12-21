@@ -9,6 +9,7 @@ class Token:
         self.velocity = pygame.Vector2(0, 0)
         self.is_on_ground = False
         self.collisions = []
+        self.transparent = False
 
     def is_dead(self):
         return self.dead
@@ -33,6 +34,12 @@ class Token:
 
     def reset_collisions(self):
         self.collisions = []
+
+    def set_transparent(self, val):
+        self.transparent = val
+
+    def __repr__(self):
+        return self.__class__.__name__ + " " + str(self.transparent)
 
 class Player(Token):
 
@@ -123,7 +130,7 @@ class Gamer(Enemy):
         self.ticks -= 1
         if(self.ticks < 0):
             self.cooldown()
-            tokens.append(FireBall(self.hitbox.x, self.hitbox.y, self.velocity.x == -1, tokens, False))
+            tokens.append(FireBall(self.hitbox.x, self.hitbox.y+self.hitbox.width/2, self.velocity.x == -1, tokens, False))
 
     def cooldown(self):
         self.ticks = random.randint(1, 3) * 60 
@@ -136,6 +143,7 @@ class Item(Token):
     def __init__(self, x, y, w, h):
         super().__init__(x, y, w ,h)
         self.state = "PickedUp"
+        self.set_transparent(True)
 
     def update(self, tokens):
         pass
@@ -143,7 +151,7 @@ class Item(Token):
     def render(self, g):
         pass
 
-class FireBall(Token):
+class FireBall(Item):
 
 
     def __init__(self, x, y, left, tokens, friendly):
@@ -151,7 +159,7 @@ class FireBall(Token):
         self.left = left
         self.tokens = tokens
         self.friendly = friendly
-        self.speed = 5
+        self.speed = random.randint(3, 6)
 
     def update(self, tokens):
         
