@@ -1,4 +1,4 @@
-from Tokens.token import Token, Player, Platform
+from Tokens.token import *
 import pygame
 pygame.init()
 SCREEN_WIDTH = 1280
@@ -7,7 +7,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 running = True
 
-tokens = [Player(), Platform(50, 400, 200, 10), Platform(0, 550, 1280, 40)]
+tokens = [Player(), Platform(50, 400, 200, 10), Platform(0, 550, 1280, 40), Gamer(400, 400, 40, 100)]
 dt = 0
 camera_scroll_speed = 1
 half_camera_boundry = 300
@@ -26,6 +26,7 @@ def move(token):
     if token.velocity.x != 0:
         token.moveX(dt)
         collisions = get_all_collisions(token)
+        token.add_collisions(collisions)
         for collision in collisions:
             if token.velocity.x > 0:
                 token.hitbox.x = collision.hitbox.x - token.hitbox.w
@@ -34,6 +35,7 @@ def move(token):
     if token.velocity.y != 0:
         token.moveY(dt)
         collisions = get_all_collisions(token)
+        token.add_collisions(collisions)
         for collision in collisions:
             if token.velocity.y > 0:
                 if isinstance(token, Player):
@@ -68,7 +70,8 @@ while running:
     screen.fill("gray")
 
     for token in tokens:
-        token.update()
+        token.update(tokens)
+        token.reset_collisions()
     
     handle_camera()
     
