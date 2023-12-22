@@ -113,7 +113,7 @@ class Enemy(Token):
     def get_player(self, tokens):
         return tokens[0]
 
-class Gamer(Enemy):
+class Zombie(Enemy):
 
     def __init__(self, x, y, w, h):
         super().__init__(x, y, w, h)
@@ -130,7 +130,9 @@ class Gamer(Enemy):
         self.ticks -= 1
         if(self.ticks < 0):
             self.cooldown()
-            tokens.append(FireBall(self.hitbox.x, self.hitbox.y+self.hitbox.width/2, self.velocity.x == -1, tokens, False))
+            projectile = FireBall(self.hitbox.x, self.hitbox.y+self.hitbox.width/2, self.velocity.x == -1, tokens, False)
+            projectile.state = 2
+            tokens.append(projectile)
 
     def cooldown(self):
         self.ticks = random.randint(1, 3) * 60 
@@ -142,14 +144,41 @@ class Item(Token):
 
     def __init__(self, x, y, w, h):
         super().__init__(x, y, w ,h)
-        self.state = "PickedUp"
+        self.state = 0
         self.set_transparent(True)
 
     def update(self, tokens):
+        
+        if self.state == 0:
+            self.dropped(tokens)
+        elif self.state == 1:
+            self.picked(tokens)
+        else:
+            self.active(tokens)
+
+    def active(self, tokens):
+        pass
+
+    def dropped(self, tokens):
+        
+        if self in tokens[0]:
+            self.state = 1 
+
+    def picked(self, tokens):
+        pass
+
+    def dropped_render(self, g):
+        pass
+
+    def active_render(self, g):
         pass
 
     def render(self, g):
-        pass
+
+        if self.state == 0:
+            self.dropped_render(g)
+        elif self.state == 2:
+            self.active_render(g)
 
 class FireBall(Item):
 
@@ -161,7 +190,7 @@ class FireBall(Item):
         self.friendly = friendly
         self.speed = random.randint(3, 6)
 
-    def update(self, tokens):
+    def active(self, tokens):
         
         if self.left:
             self.velocity.x = -self.speed
@@ -182,6 +211,6 @@ class FireBall(Item):
                     coll.dead = True
                     self.dead = True
 
-    def render(self, g):
+    def active_render(self, g):
         pygame.draw.rect(g, (255, 255, 255), self.hitbox)
 
