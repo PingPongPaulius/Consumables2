@@ -1,5 +1,6 @@
 import pygame
 import random
+from Tokens.inventory import Inventory
 
 class Token:
 
@@ -46,7 +47,9 @@ class Player(Token):
     def __init__(self):
         super().__init__(100, 100, 40, 100)
         self.speed = 10
-    
+        self.inventory = Inventory()
+        self.item_keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]
+
     def update(self, tokens):
 
         self.velocity.x = 0
@@ -58,6 +61,12 @@ class Player(Token):
             self.velocity.x = self.speed
         if keys[pygame.K_w] and self.is_on_ground:
             self.velocity.y = -25
+        
+        for index, key in enumerate(self.item_keys):
+            if key:
+                item = self.inventory.use(index)
+                if item is not None:
+                    item.use(self, tokens)
 
         if self.is_on_ground and self.velocity.y >= 1:
             self.velocity.y = 0
@@ -73,6 +82,7 @@ class Player(Token):
 
     def render(self, g):
         pygame.draw.rect(g, (255, 0, 0), self.hitbox)
+        self.inventory.render_bar(g)
 
 class Platform(Token):
 
@@ -142,10 +152,13 @@ class Zombie(Enemy):
 
 class Item(Token):
 
-    def __init__(self, x, y, w, h):
+    def __init__(self, x, y, w, h, left, tokens, friendly):
         super().__init__(x, y, w ,h)
         self.state = 0
         self.set_transparent(True)
+        self.left = left
+        self.tokens = tokens
+        self.friendly = friendly
 
     def update(self, tokens):
         
@@ -162,10 +175,22 @@ class Item(Token):
     def dropped(self, tokens):
         
         if self in tokens[0]:
-            self.state = 1 
+            if(tokens[0].inventory.add(self)):
+                self.state = 1
+            else:
+                self.state = 0
 
     def picked(self, tokens):
-        pass
+       pass 
+
+    def use(self, token, tokens):
+        tokens.append(self)
+        item.state = 2
+        item.friendly = isinstance(token, Player)
+        item.left = self.velocity.x < 0
+        item.hitbox.x = self.hitbox.x
+        item.hitbox.y = self.hitbox.y
+
 
     def dropped_render(self, g):
         pass
@@ -184,10 +209,7 @@ class FireBall(Item):
 
 
     def __init__(self, x, y, left, tokens, friendly):
-        super().__init__(x, y, 30, 30)
-        self.left = left
-        self.tokens = tokens
-        self.friendly = friendly
+        super().__init__(x, y, 30, 30, left, tokens, friendly)
         self.speed = random.randint(3, 6)
 
     def active(self, tokens):
