@@ -9,7 +9,8 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 running = True
 
-tokens = [Player(), Platform(50, 400, 200, 10), Platform(0, 550, 1280, 40)]
+tokens = [Platform(50, 400, 200, 10), Platform(0, 550, 1280, 40)]
+tokens = [Player(tokens)] + tokens
 possible_enemies = [Zombie(400, 400, 40, 100)]
 dt = 0
 level = 1

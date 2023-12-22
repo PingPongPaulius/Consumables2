@@ -11,6 +11,7 @@ class Token:
         self.is_on_ground = False
         self.collisions = []
         self.transparent = False
+        self.facing_left = False
 
     def is_dead(self):
         return self.dead
@@ -44,11 +45,14 @@ class Token:
 
 class Player(Token):
 
-    def __init__(self):
+    def __init__(self, tokens):
         super().__init__(100, 100, 40, 100)
         self.speed = 10
         self.inventory = Inventory()
         self.item_keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]
+        starting_item = FireBall(self.hitbox.x, self.hitbox.y+self.hitbox.width/2, self.velocity.x == -1, tokens, False)
+        starting_item.state = 1
+        self.inventory.add(starting_item)
 
     def update(self, tokens):
 
@@ -57,13 +61,15 @@ class Player(Token):
 
         if keys[pygame.K_a]:
             self.velocity.x = -self.speed 
+            self.facing_left = True 
         if keys[pygame.K_d]:
             self.velocity.x = self.speed
+            self.facing_left = False
         if keys[pygame.K_w] and self.is_on_ground:
             self.velocity.y = -25
         
         for index, key in enumerate(self.item_keys):
-            if key:
+            if keys[key]:
                 item = self.inventory.use(index)
                 if item is not None:
                     item.use(self, tokens)
@@ -185,11 +191,11 @@ class Item(Token):
 
     def use(self, token, tokens):
         tokens.append(self)
-        item.state = 2
-        item.friendly = isinstance(token, Player)
-        item.left = self.velocity.x < 0
-        item.hitbox.x = self.hitbox.x
-        item.hitbox.y = self.hitbox.y
+        self.state = 2
+        self.friendly = isinstance(token, Player)
+        self.left = token.facing_left
+        self.hitbox.x = token.hitbox.x
+        self.hitbox.y = token.hitbox.y
 
 
     def dropped_render(self, g):
@@ -235,4 +241,8 @@ class FireBall(Item):
 
     def active_render(self, g):
         pygame.draw.rect(g, (255, 255, 255), self.hitbox)
+
+    def use(self, token, tokens):
+        super().use(token, tokens)
+        self.hitbox.y = token.hitbox.y + (token.hitbox.height / 2 - self.hitbox.height / 2)
 

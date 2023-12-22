@@ -19,9 +19,9 @@ class Inventory:
             self.quantities[index] += 1
             return True
         else:
-            for index, item in enumerate(self.items):
-                if item is None:
-                    self.items[index] = self.item
+            for index, slot in enumerate(self.items):
+                if slot is None:
+                    self.items[index] = item
                     self.quantities[index] = 1
                     return True
 
@@ -29,8 +29,18 @@ class Inventory:
 
     def render_bar(self, g):
         for i in range(self.active_slots):
-            slot = pygame.Rect(400 + (i*80), 600, 80, 80)
+            x = 400 + (i*90)
+            y = 600
+            slot = pygame.Rect(x, y, 80, 80)
             pygame.draw.rect(g, (255, 255, 255, 100), slot)
+            if self.items[i] != None:
+                slot = pygame.Rect(x + 15, y + 15, 50, 50)
+                pygame.draw.rect(g, (0,0,0), slot)
+                
+                font = pygame.font.SysFont("Arial", 20)
+                txt = font.render(str(self.quantities[i]), True, (0,0,0))
+                g.blit(txt, (x+2, y + 60))
+
 
     def render_full(self, g):
         pass
