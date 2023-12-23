@@ -155,7 +155,7 @@ class Zombie(Enemy):
             self.cooldown()
             projectile = FireBall(self.hitbox.x, self.hitbox.y+self.hitbox.width/2, self.velocity.x == -1, tokens, False)
             projectile.state = 2
-            #tokens.append(projectile)
+            tokens.append(projectile)
 
     def cooldown(self):
         self.ticks = random.randint(1, 3) * 60 
