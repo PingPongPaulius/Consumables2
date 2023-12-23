@@ -50,7 +50,7 @@ class Player(Token):
         self.speed = 10
         self.inventory = Inventory()
         self.item_keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]
-        starting_item = FireBall(self.hitbox.x, self.hitbox.y+self.hitbox.width/2, self.velocity.x == -1, tokens, False)
+        starting_item = ElectroShock(self.hitbox.x, self.hitbox.y+self.hitbox.height/2, tokens, True, self)
         starting_item.state = 1
         self.inventory.add(starting_item)
         self.inventory_render_type = True
@@ -155,7 +155,7 @@ class Zombie(Enemy):
             self.cooldown()
             projectile = FireBall(self.hitbox.x, self.hitbox.y+self.hitbox.width/2, self.velocity.x == -1, tokens, False)
             projectile.state = 2
-            tokens.append(projectile)
+            #tokens.append(projectile)
 
     def cooldown(self):
         self.ticks = random.randint(1, 3) * 60 
@@ -204,6 +204,21 @@ class Item(Token):
         self.hitbox.x = token.hitbox.x
         self.hitbox.y = token.hitbox.y
 
+    def kill(self):
+
+        if self.friendly:
+
+            print(self.hitbox)
+
+            for coll in self.collisions:
+                if isinstance(coll, Enemy):
+                    coll.dead = True
+                    self.dead = True
+        else:
+            for coll in self.collisions:
+                if isinstance(coll, Player):
+                    coll.dead = True
+                    self.dead = True
 
     def dropped_render(self, g):
         pass
@@ -234,17 +249,8 @@ class FireBall(Item):
 
         if self.hitbox.x < 0 or self.hitbox.x > 1080:
             self.dead = True
+        self.kill()
 
-        if self.friendly:
-            for coll in self.collisions:
-                if isinstance(coll, Enemy):
-                    coll.dead = True
-                    self.dead = True
-        else:
-            for coll in self.collisions:
-                if isinstance(coll, Player):
-                    coll.dead = True
-                    self.dead = True
 
     def active_render(self, g):
         pygame.draw.rect(g, (255, 255, 255), self.hitbox)
@@ -252,4 +258,27 @@ class FireBall(Item):
     def use(self, token, tokens):
         super().use(token, tokens)
         self.hitbox.y = token.hitbox.y + (token.hitbox.height / 2 - self.hitbox.height / 2)
+
+class ElectroShock(Item):
+    
+    def __init__(self, x, y, tokens, friendly, user):
+        super().__init__(x, y, user.hitbox.width, user.hitbox.height, False, tokens, friendly)
+        self.user = user
+
+    def active(self, tokens):
+        
+        if self.friendly:
+            self.user = tokens[0]
+        
+        if self.user.velocity.x < 0:
+            self.hitbox.x = self.user.hitbox.x - self.hitbox.width
+        elif self.user.velocity.x > 0:
+            self.hitbox.x = self.user.hitbox.x + self.user.hitbox.width
+
+        self.hitbox.y = self.user.hitbox.y
+        self.kill()
+
+    def active_render(self, g):
+        pygame.draw.rect(g, (0,0,0), self.hitbox)
+
 

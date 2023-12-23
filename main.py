@@ -21,7 +21,7 @@ def get_all_collisions(movable):
     
     collisions = []
     for token in tokens:
-        if token != movable and movable.collides(token) :
+        if token != movable and movable.collides(token):
             collisions.append(token)
 
     return collisions
@@ -51,6 +51,10 @@ def move(token):
                 if token.velocity.y < 0:
                     token.velocity.y = 0
                     token.hitbox.y = collision.hitbox.y + collision.hitbox.h
+    
+    if isinstance(token, Item) and len(token.collisions) == 0:
+        collisions = get_all_collisions(token)
+        token.add_collisions(collisions)
 
 def handle_camera():
 
