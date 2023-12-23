@@ -53,12 +53,13 @@ class Player(Token):
         starting_item = FireBall(self.hitbox.x, self.hitbox.y+self.hitbox.width/2, self.velocity.x == -1, tokens, False)
         starting_item.state = 1
         self.inventory.add(starting_item)
+        self.inventory_render_type = True
+        self.space_pressed_prev_frame = False 
 
     def update(self, tokens):
-
+        
         self.velocity.x = 0
         keys = pygame.key.get_pressed()
-
         if keys[pygame.K_a]:
             self.velocity.x = -self.speed 
             self.facing_left = True 
@@ -67,7 +68,10 @@ class Player(Token):
             self.facing_left = False
         if keys[pygame.K_w] and self.is_on_ground:
             self.velocity.y = -25
-        
+        if not keys[pygame.K_SPACE] and self.space_pressed_prev_frame:
+            self.inventory_render_type = not self.inventory_render_type
+        self.space_pressed_prev_frame = keys[pygame.K_SPACE]
+
         for index, key in enumerate(self.item_keys):
             if keys[key]:
                 item = self.inventory.use(index)
@@ -88,7 +92,10 @@ class Player(Token):
 
     def render(self, g):
         pygame.draw.rect(g, (255, 0, 0), self.hitbox)
-        self.inventory.render_bar(g)
+        if self.inventory_render_type:
+            self.inventory.render_bar(g)
+        else:
+            self.inventory.render_full(g)
 
 class Platform(Token):
 
