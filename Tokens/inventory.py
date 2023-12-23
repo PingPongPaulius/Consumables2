@@ -9,6 +9,7 @@ class Inventory:
         self.quantities = []
         self.active_slots = 5
         self.switch_item_1 = None
+        self.switched = False
         for i in range(self.size):
             self.items.append(None)
             self.quantities.append(None)
@@ -52,6 +53,8 @@ class Inventory:
         pos = None
         if(keys[0]):
             pos = pygame.mouse.get_pos()
+        else:
+            self.switched = False
         # Loop rendering
         for i in range(self.size):
             slot = pygame.Rect(x, y, 80, 80)
@@ -64,8 +67,8 @@ class Inventory:
                 txt = font.render(str(self.quantities[i]), True, (0,0,0))
                 g.blit(txt, (x+2, y + 60))
 
-                # Handle Selection
-            if pos is not None:
+            # Handle Selection
+            if pos is not None and not self.switched:
                 if slot.colliderect(pygame.Rect(pos[0], pos[1], 1, 1)):
                     if self.switch_item_1 is None and self.items[i] is not None:
                         self.switch_item_1 = i
@@ -73,6 +76,7 @@ class Inventory:
                         self.switch(self.items, i, self.switch_item_1)
                         self.switch(self.quantities, i, self.switch_item_1)
                         self.switch_item_1 = None
+                        self.switched = True
 
 
         # Handle placement logic   
