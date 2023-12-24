@@ -264,6 +264,7 @@ class ElectroShock(Item):
     def __init__(self, x, y, tokens, friendly, user):
         super().__init__(x, y, user.hitbox.width, user.hitbox.height, False, tokens, friendly)
         self.user = user
+        self.ticks = 60
 
     def active(self, tokens):
         
@@ -277,6 +278,10 @@ class ElectroShock(Item):
 
         self.hitbox.y = self.user.hitbox.y
         self.kill()
+
+        self.ticks -= 1
+        if self.ticks  < 0:
+            self.dead = True
 
     def active_render(self, g):
         pygame.draw.rect(g, (0,0,0), self.hitbox)
