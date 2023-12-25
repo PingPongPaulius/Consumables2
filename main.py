@@ -103,6 +103,11 @@ while running:
 
     for token in reversed(tokens):
         if token.is_dead():
+            if isinstance(token, Enemy):
+                drop = token.get_drop(tokens)
+                drop.state = 0
+                drop.start_drop()
+                tokens.append(drop)
             tokens.remove(token)
 
     if level_clear:

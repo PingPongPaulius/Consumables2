@@ -112,6 +112,10 @@ class Enemy(Token):
 
     def AI(self, tokens):
         pass
+
+    def get_drop(self, tokens):
+        drops = self.get_drops(tokens)
+        return random.choice(drops)
     
     def get_drops(self):
         pass
@@ -133,6 +137,7 @@ class Enemy(Token):
                 self.velocity.y = 7
 
         self.is_on_ground = False
+
     def get_player(self, tokens):
         return tokens[0]
 
@@ -155,13 +160,13 @@ class Zombie(Enemy):
             self.cooldown()
             projectile = FireBall(self.hitbox.x, self.hitbox.y+self.hitbox.width/2, self.velocity.x == -1, tokens, False)
             projectile.state = 2
-            tokens.append(projectile)
+            #tokens.append(projectile)
 
     def cooldown(self):
         self.ticks = random.randint(1, 3) * 60 
     
-    def get_drops(self):
-        pass
+    def get_drops(self, tokens):
+        return [FireBall(self.hitbox.x, self.hitbox.y, False, tokens, True)]
 
 class Item(Token):
 
@@ -172,6 +177,9 @@ class Item(Token):
         self.left = left
         self.tokens = tokens
         self.friendly = friendly
+
+    def start_drop(self):
+        self.velocity.y = -10
 
     def update(self, tokens):
         
@@ -186,12 +194,25 @@ class Item(Token):
         pass
 
     def dropped(self, tokens):
-        
-        if self in tokens[0]:
+
+        if tokens[0] in self.collisions:
             if(tokens[0].inventory.add(self)):
                 self.state = 1
+                self.velocity.y = 0
             else:
                 self.state = 0
+
+        if self.is_on_ground and self.velocity.y >= 1:
+            self.velocity.y = 0
+        else:
+            self.velocity.y += 1
+            if self.velocity.y > 3:
+                self.velocity.y += 0.5
+
+            if self.velocity.y > 7:
+                self.velocity.y = 7
+
+        self.is_on_ground = False
 
     def picked(self, tokens):
        pass 
@@ -208,8 +229,6 @@ class Item(Token):
 
         if self.friendly:
 
-            print(self.hitbox)
-
             for coll in self.collisions:
                 if isinstance(coll, Enemy):
                     coll.dead = True
@@ -221,7 +240,7 @@ class Item(Token):
                     self.dead = True
 
     def dropped_render(self, g):
-        pass
+        pygame.draw.rect(g, (0,0,0), self.hitbox)
 
     def active_render(self, g):
         pass
@@ -257,6 +276,8 @@ class FireBall(Item):
 
     def use(self, token, tokens):
         super().use(token, tokens)
+        self.velocity.x = 0
+        self.velocity.y = 0
         self.hitbox.y = token.hitbox.y + (token.hitbox.height / 2 - self.hitbox.height / 2)
 
 class ElectroShock(Item):
