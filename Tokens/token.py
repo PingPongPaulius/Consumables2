@@ -246,8 +246,19 @@ class Item(Token):
         pass
 
     def render(self, g):
-
         if self.state == 0:
+            if self.velocity.y > 0 :
+                for c in self.collisions:
+                    if isinstance(c, Platform):
+                        self.hitbox.y = c.hitbox.y - self.hitbox.height
+                        self.is_on_ground = True
+                        self.velocity.y = 0
+            elif self.velocity.y < 0:
+                for c in self.collisions:
+                    if isinstance(c, Platform):
+                        self.hitbox.y = c.hitbox.y + c.hitbox.height
+                        self.is_on_ground = False 
+                        self.velocity.y = 0
             self.dropped_render(g)
         elif self.state == 2:
             self.active_render(g)
