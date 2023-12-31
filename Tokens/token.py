@@ -51,10 +51,18 @@ class Player(Token):
         self.inventory = Inventory()
         self.item_keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]
         starting_item = ElectroShock(self.hitbox.x, self.hitbox.y+self.hitbox.height/2, tokens, True, self)
-        starting_item.state = 1
-        self.inventory.add(starting_item)
+        self.add_item(starting_item)
+        self.add_item(JumpTracker(tokens))
+        for i in range(5):
+            self.add_item(Teleporter(tokens))
         self.inventory_render_type = True
         self.space_pressed_prev_frame = False 
+        self.pressed_frame = [False, False, False, False, False]
+
+    def add_item(self, item):
+        starting_item = item
+        starting_item.state = 1
+        self.inventory.add(starting_item)
 
     def update(self, tokens):
         
@@ -73,10 +81,13 @@ class Player(Token):
         self.space_pressed_prev_frame = keys[pygame.K_SPACE]
 
         for index, key in enumerate(self.item_keys):
-            if keys[key]:
+            if keys[key] and not self.pressed_frame[index]:
+                self.pressed_frame[index] = True
                 item = self.inventory.use(index)
                 if item is not None:
                     item.use(self, tokens)
+            elif not keys[key]:
+                self.pressed_frame[index] = False
 
         if self.is_on_ground and self.velocity.y >= 1:
             self.velocity.y = 0
@@ -177,9 +188,17 @@ class Item(Token):
         self.left = left
         self.tokens = tokens
         self.friendly = friendly
+        self.id = -1
 
     def start_drop(self):
         self.velocity.y = -10
+
+    def __eq__(self, other):
+        if other == None:
+            return False
+        if not isinstance(other, Item):
+            return False
+        return self.id == other.id
 
     def update(self, tokens):
         
@@ -227,17 +246,19 @@ class Item(Token):
 
     def kill(self):
 
+        collided = False
         if self.friendly:
-
             for coll in self.collisions:
                 if isinstance(coll, Enemy):
                     coll.dead = True
-                    self.dead = True
+                    collided = True
         else:
             for coll in self.collisions:
                 if isinstance(coll, Player):
                     coll.dead = True
-                    self.dead = True
+                    collided = True
+        
+        return collided
 
     def dropped_render(self, g):
         pygame.draw.rect(g, (0,0,0), self.hitbox)
@@ -269,6 +290,8 @@ class FireBall(Item):
     def __init__(self, x, y, left, tokens, friendly):
         super().__init__(x, y, 30, 30, left, tokens, friendly)
         self.speed = random.randint(3, 6)
+        self.ticks = 150
+        self.id = 1
 
     def active(self, tokens):
         
@@ -277,10 +300,13 @@ class FireBall(Item):
         else:
             self.velocity.x = self.speed
 
-        if self.hitbox.x < 0 or self.hitbox.x > 1080:
+        if self.ticks <= 0:
             self.dead = True
-        self.kill()
-
+        else:
+            self.ticks -= 1
+         
+        if self.kill():
+            self.dead = True
 
     def active_render(self, g):
         pygame.draw.rect(g, (255, 255, 255), self.hitbox)
@@ -297,6 +323,7 @@ class ElectroShock(Item):
         super().__init__(x, y, user.hitbox.width, user.hitbox.height, False, tokens, friendly)
         self.user = user
         self.ticks = 60
+        self.id = 2
 
     def active(self, tokens):
         
@@ -316,6 +343,97 @@ class ElectroShock(Item):
             self.dead = True
 
     def active_render(self, g):
+        pygame.draw.rect(g, (0,0,0), self.hitbox)
+
+class Teleporter(Item):
+
+    def __init__(self, tokens):
+        super().__init__(0,0,1,1, False, tokens, True)
+        self.id = 3
+    
+    def active(self, tokens):
+        
+        if self.friendly:
+            self.user = tokens[0]
+        else:
+            print("Enemy Teleports")
+
+        mouse_pos = pygame.mouse.get_pos()
+        self.user.hitbox.x = mouse_pos[0]
+        self.user.hitbox.y = mouse_pos[1]
+        self.dead = True
+
+class JumpTracker(Item):
+
+    def __init__(self, tokens):
+        super().__init__(0,0,1,1, False, tokens, True)
+        self.ticks = 120
+        self.pos = []
+        self.render_list = []
+        self.done = False
+        self.id = 4
+    
+    def active(self, tokens):
+        
+        if self.done:
+            return
+
+        if self.friendly:
+            self.user = tokens[0]
+        else:
+            print("Enemy Teleports")
+
+        self.ticks -= 1
+        self.pos.append([self.user.hitbox.x - self.user.hitbox.width/2, self.user.hitbox.y + self.user.hitbox.height/2])
+
+        if self.ticks < 0 and not self.done:
+            self.done = True
+            curr = self.pos.pop(0)
+            repetative = {}
+            while len(self.pos) > 0:
+                nxt  = self.pos[0] 
+                if curr[0] == nxt[0] and curr[1] == nxt[1]:
+                    curr = self.pos.pop(0)
+
+                if curr[0] > nxt[0]:
+                    curr[0] -= 1
+                elif curr[0] < nxt[0]:
+                    curr[0] += 1
+
+                if curr[1] > nxt[1]:
+                    curr[1] -= 1
+                elif curr[1] < nxt[1]:
+                    curr[1] += 1
+
+                values = repetative.get(curr[0]) 
+                if values is not None:
+                    if curr[1] not in values:
+                        self.render_list.append(pygame.Rect(curr[0], curr[1], 1, 1))
+                        repetative[curr[0]] = repetative[curr[0]].append(curr[1])
+                else:
+                    repetative[curr[0]] = [curr[1]]
+                    self.render_list.append(pygame.Rect(curr[0], curr[1], 1, 1))
+
+            for t in self.render_list:
+                tokens.append(DeathParticle(t.x, t.y, 1, 1, 1000))
+            
+class DeathParticle(Token):
+
+    def __init__(self, x, y, w, h, ticks):
+        super().__init__(x, y, w, h)
+        self.transparent = True
+        self.ticks = ticks
+
+    def update(self, tokens):
+            for token in tokens:
+                if isinstance(token, Enemy):
+                    if self.hitbox.colliderect(token.hitbox):
+                        token.dead = True
+            self.ticks -= 1
+            if self.ticks < 0:
+                self.dead = True
+
+    def render(self, g):
         pygame.draw.rect(g, (0,0,0), self.hitbox)
 
 
